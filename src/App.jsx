@@ -1,9 +1,27 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, memo } from "react"
 import './index.css';
+
+
+const PoliticianCard = memo(({ name, image, position, biography }) => {
+  console.log('test')
+  return (
+    <div className="politicians-card">
+      <h3 className="card-title">{name}</h3>
+      <figure className="card-image">
+        <img src={image} alt={name} />
+      </figure>
+      <p className="card-position"><strong>posizione:</strong>{position}</p>
+      <p className="card-biography">{biography}</p>
+    </div>
+  )
+})
+
 function App() {
 
   //dichiaro lo stato iniziale dell'oggetto 
   const [politicians, setPoliticians] = useState([])
+
+  const [search, setSearch] = useState("")
 
   useEffect(() => {
     fetch('http://localhost:3333/politicians')
@@ -13,23 +31,29 @@ function App() {
   }, []) // useEffect vuole sempre una dipendenza che adesso è settata come vuota
 
 
+  const politiciansFiltred = useMemo(() => {
+    return politicians.filter((politician) => {
+      const isInName = politician.name.toLowerCase().includes(search.toLocaleLowerCase())
+      const isInBio = politician.biography.toLowerCase().includes(search.toLocaleLowerCase())
+      return isInName || isInBio
+    })
+  }, [politicians, search])
 
-  console.log(politicians)
   return (
     <>
       <h1>Lista dei politici</h1>
+      <input
+        type="text"
+        placeholder="cerca per nome o per biografia"
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+      />
+     
       <div className="politicians-list">
-        {politicians.map(p => {
-          const { id, name, image, position, biography } = p
+        {politiciansFiltred.map(p => {
+
           return (
-            <div key={id} className="politicians-card">
-              <h3 className="card-title">{name}</h3>
-              <figure className="card-image">
-                <img src={image} alt={name} />
-              </figure>
-              <p className="card-position"><strong>posizione:</strong>{position}</p>
-              <p className="card-biography">{biography}</p>
-            </div>
+            <PoliticianCard key={p.id} {...p} />
           )
         })
         }
